@@ -1,0 +1,27 @@
+sources:
+  docker:
+    type: "docker_logs"
+    docker_host: "unix:///var/run/docker.sock"
+    retry_backoff_secs: 1
+    include_containers: ["users-api", "users-db"]
+
+sinks:
+  loki:
+    type: "loki"
+    compression: "snappy"
+    out_of_order_action: "accept"
+    healthcheck: false
+    inputs:
+      - "docker"
+    endpoint: "http://users-loki:3100"
+    request:
+      retry_attempts: 5
+      in_flight_limit: 1
+    encoding:
+      codec: "json"
+    auth:
+      strategy: "basic"
+      user: "admin"
+      password: "admin"
+    labels:
+      container_name: "{{ container_name }}"

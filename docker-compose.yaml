@@ -1,0 +1,130 @@
+version: "3.8"
+
+services:
+  app:
+    container_name: ${USER_API_HOST}
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres-migrations:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    expose:
+      - "5005"
+    ports:
+      - "5005:5005"
+    networks:
+      - users-network
+    command: [
+      "poetry", "run", "uvicorn", "app:create_app",
+      "--host", "0.0.0.0",
+      "--port", '5005',
+    ]
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsSL http://localhost:5005/healthcheck" ]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
+
+  postgres:
+      image: postgres:17-alpine
+      container_name: users-db
+      env_file:
+        - .env
+      expose:
+        - "5432"
+      ports:
+        - "5432:5432"
+      networks:
+        - users-network
+      volumes:
+        - postgres_data:/var/lib/postgresql/users:rw
+      environment:
+        POSTGRES_PASSWORD: ${POSTGRESQL__POSTGRES_PASSWORD}
+        POSTGRES_USER: ${POSTGRESQL__POSTGRES_USER}
+        POSTGRES_DB: ${POSTGRESQL__POSTGRES_DATABASE_NAME}
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U $${POSTGRESQL__POSTGRES_USER} -d $${POSTGRESQL__POSTGRES_DATABASE_NAME}" ]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+      restart: unless-stopped
+
+  postgres-migrations:
+    container_name: users-migrations
+    build:
+      context: .
+      dockerfile: docker/migrations/Dockerfile
+    restart: on-failure
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: [
+      "poetry", "run", "python", "-m", "scripts.migrate"
+    ]
+    networks:
+      - users-network
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: users-grafana
+    hostname: users-grafana
+    restart: unless-stopped
+    expose:
+      - "3000"
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - users-network
+    volumes:
+      - grafana_data:/var/lib/grafana:rw
+      - ./grafana/provisioning:/etc/grafana/provisioning:rw
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+
+  loki:
+    image: grafana/loki:2.9.11
+    container_name: users-loki
+    hostname: users-loki
+    expose:
+      - "3100"
+    volumes:
+      - ./loki/config.yaml:/etc/loki/config.yaml:ro
+      - loki_data:/tmp/:rw
+    restart: unless-stopped
+    networks:
+      - users-network
+
+  vector:
+    image: timberio/vector:0.43.0-alpine
+    container_name: users-vector
+    hostname: users-vector
+    restart: unless-stopped
+    expose:
+      - "8383"
+    networks:
+      - users-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./vector/:/etc/vector/
+    depends_on:
+      - loki
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+
+networks:
+  users-network: {}
+
+volumes:
+  postgres_data: {}
+  grafana_data: {}
+  loki_data: {}
