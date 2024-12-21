@@ -1,16 +1,21 @@
+"""User routes."""
+
 from typing import List
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, status
 
-from app.internal.pkg.middlewares.validation import validate_access_key
 from app.internal.services import Services
 from app.internal.services.users import UserService
+from app.internal.pkg.middlewares.validation import validate_access_key
 from app.pkg import models
 
 users_router = APIRouter(
     prefix="/users",
     tags=["Users"],
+    dependencies=[
+        Depends(validate_access_key),
+    ],
 )
 
 
@@ -18,9 +23,6 @@ users_router = APIRouter(
     "",
     status_code=status.HTTP_201_CREATED,
     description="Create new user.",
-    dependencies=[
-        Depends(validate_access_key),
-    ],
     response_model=models.User,
 )
 @inject
@@ -37,9 +39,6 @@ async def create_user(
     "/{user_id:int}",
     status_code=status.HTTP_200_OK,
     description="Get an user.",
-    dependencies=[
-        Depends(validate_access_key),
-    ],
     response_model=models.User,
 )
 @inject
@@ -58,9 +57,6 @@ async def read_user(
     "",
     status_code=status.HTTP_200_OK,
     description="Get all users.",
-    dependencies=[
-        Depends(validate_access_key),
-    ],
     response_model=List[models.User],
 )
 @inject
@@ -76,22 +72,18 @@ async def read_all_users(
     "/{user_id:int}",
     status_code=status.HTTP_200_OK,
     description="Update an user.",
-    dependencies=[
-        Depends(validate_access_key),
-    ],
     response_model=models.User,
 )
 @inject
 async def update_user(
-    user_id: str,
-    cmd: models.UpdateUserCommand,
+    user_id: int,
+    cmd: models.UpdateUserCommandPayload,
     users_service: UserService = Depends(
         Provide[Services.users_service],
     ),
 ):
-    cmd.id = user_id
     return await users_service.update_user(
-        cmd=cmd,
+        cmd=models.UpdateUserCommand(id=user_id, **cmd.to_dict()),
     )
 
 
@@ -99,14 +91,11 @@ async def update_user(
     "/{user_id:int}",
     status_code=status.HTTP_200_OK,
     description="Delete an user.",
-    dependencies=[
-        Depends(validate_access_key),
-    ],
     response_model=models.User,
 )
 @inject
 async def delete_user(
-    user_id: str,
+    user_id: int,
     users_service: UserService = Depends(
         Provide[Services.users_service],
     ),

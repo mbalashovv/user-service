@@ -1,3 +1,5 @@
+"""PostgreSQL repository for users."""
+
 from typing import List
 
 from app.internal.repository.base import Repository
@@ -11,6 +13,7 @@ __all__ = ["UserRepository"]
 
 
 class UserRepository(Repository):
+    """User repository implementation."""
 
     @collect_response
     async def create(self, cmd: models.CreateUserCommand) -> models.User:
@@ -30,8 +33,8 @@ class UserRepository(Repository):
     @collect_response
     async def read(self, query: models.ReadUserQuery) -> models.User:
         q = """
-            select id, username, password, created_at, deleted_at from users 
-                where id = %(id)s;
+            select id, username, password, created_at, deleted_at from users
+                where id = %(id)s and deleted_at is null;
         """
         async with get_connection() as cur:
             await cur.execute(q, query.to_dict())
@@ -40,21 +43,20 @@ class UserRepository(Repository):
     @collect_response
     async def read_all(self) -> List[models.User]:
         q = """
-            select id, username, password, created_at, deleted_at from users;
+            select id, username, password, created_at, deleted_at from users
+                where deleted_at is null;
         """
         async with get_connection() as cur:
             await cur.execute(q)
             return await cur.fetchall()
 
     @collect_response
-    async def update(self, cmd: models.UpdateUserCommand) -> models.User:
-        q = """
-            update users set {update_statements}
-                where id = %(id)s
+    async def update(self, cmd: models.UpdateUserCommand) -> models.User:  # nosec
+        q = f"""
+            update users set {self.__build_update_statement(cmd=cmd)}
+                where id = %(id)s and deleted_at is null
             returning id, username, password, created_at, deleted_at;
-        """.format(
-            update_statements=self.__build_update_statement(cmd=cmd)
-        )
+        """
 
         async with get_connection() as cur:
             await cur.execute(q, cmd.to_dict())
@@ -64,7 +66,7 @@ class UserRepository(Repository):
     async def delete(self, cmd: models.DeleteUserCommand) -> models.User:
         q = """
             update users set deleted_at = now()
-                where id = %(id)s
+                where id = %(id)s and deleted_at is null
             returning id, username, password, created_at, deleted_at;
         """
         async with get_connection() as cur:
@@ -79,13 +81,13 @@ class UserRepository(Repository):
             update_statements.append(
                 """
                     username = %(username)s
-                """
+                """,
             )
         if cmd.password is not None:
             update_statements.append(
                 """
                     password = %(password)s
-                """
+                """,
             )
 
         return (", ".join(update_statements)) if update_statements else ""

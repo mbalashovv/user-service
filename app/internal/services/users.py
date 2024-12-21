@@ -3,6 +3,8 @@
 from typing import List
 
 from app.internal.repository.postgresql.users import UserRepository
+from app.pkg.models.exceptions.repository import EmptyResult
+from app.pkg.models.exceptions.users import UserWasNotFound
 from app.pkg import models
 
 __all__ = ["UserService"]
@@ -26,19 +28,31 @@ class UserService:
         self,
         query: models.ReadUserQuery,
     ) -> models.User:
-        return await self.__user_repository.read(query=query)
+        try:
+            return await self.__user_repository.read(query=query)
+        except EmptyResult as e:
+            raise UserWasNotFound from e
 
     async def read_all_users(self) -> List[models.User]:
-        return await self.__user_repository.read_all()
+        try:
+            return await self.__user_repository.read_all()
+        except EmptyResult:
+            return []
 
     async def update_user(
         self,
         cmd: models.UpdateUserCommand,
     ) -> models.User:
-        return await self.__user_repository.update(cmd=cmd)
+        try:
+            return await self.__user_repository.update(cmd=cmd)
+        except EmptyResult as e:
+            raise UserWasNotFound from e
 
     async def delete_user(
         self,
         cmd: models.DeleteUserCommand,
     ) -> models.User:
-        return await self.__user_repository.delete(cmd=cmd)
+        try:
+            return await self.__user_repository.delete(cmd=cmd)
+        except EmptyResult as e:
+            raise UserWasNotFound from e

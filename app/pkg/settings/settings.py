@@ -24,35 +24,32 @@ class _Settings(BaseSettings):
         env_file_encoding = "utf-8"
         #: str: allow custom fields in model.
         arbitrary_types_allowed = True
-        #: bool: case-sensitive for env variables.
-        case_sensitive = True
-        #: str: delimiter for nested env variables.
-        env_nested_delimiter = "__"
 
 
 class PostgreSQL(_Settings):
     """PostgreSQL settings."""
 
     #: str: Postgresql host.
-    POSTGRES_HOST: str
+    POSTGRESQL_HOST: str
     #: PositiveInt: positive int (x > 0) port of postgresql.
-    POSTGRES_PORT: PositiveInt
+    POSTGRESQL_PORT: PositiveInt
     #: str: Postgresql user.
-    POSTGRES_USER: str
+    POSTGRESQL_USER: str
     #: SecretStr: Postgresql password.
-    POSTGRES_PASSWORD: SecretStr
+    POSTGRESQL_PASSWORD: SecretStr
     #: str: Postgresql database name.
-    POSTGRES_DATABASE_NAME: str
+    POSTGRESQL_DATABASE_NAME: str
 
 
 class Logging(_Settings):
     """Logging settings."""
 
-    LEVEL: LoggerLevel = LoggerLevel.DEBUG
+    LOGGING_LEVEL: LoggerLevel = LoggerLevel.DEBUG
     FOLDER_PATH: pathlib.Path = pathlib.Path("./src/logs")
 
+    # pylint: disable=unused-private-member, no-self-argument
     @validator("FOLDER_PATH")
-    def __create_dir_if_not_exist(  # pylint: disable=unused-private-member, no-self-argument
+    def __create_dir_if_not_exist(
         cls,
         v: pathlib.Path,
     ):
@@ -68,36 +65,21 @@ class APIServer(_Settings):
 
     # --- API SETTINGS ---
     #: str: Name of API service
-    INSTANCE_APP_NAME: str = "user_api"
-    #: str: API host.
-    HOST: str = "localhost"
-    #: PositiveInt: positive int (x > 0) port of API.
-    PORT: PositiveInt = 8000
+    API_INSTANCE_APP_NAME: str = "user_api"
     #: bool: Debug mode flag
-    DEBUG_MODE: Optional[bool] = False
+    API_DEBUG_MODE: Optional[bool] = False
 
     # --- SECURITY SETTINGS ---
     #: SecretStr: Secret key for token auth.
-    X_API_TOKEN: SecretStr = SecretStr("secret")
-
-    # --- OTHER SETTINGS ---
-    #: Logging: Logging settings.
-    LOGGER: Logging
+    API_X_API_TOKEN: SecretStr = SecretStr("secret")
 
 
-class Settings(_Settings):
-    """Server settings."""
-
-    #: APIServer: API settings. Contains all settings for API.
-    API: APIServer
-
-    #: PostgreSQL: Postgresql settings.
-    POSTGRESQL: PostgreSQL
+class Settings(APIServer, PostgreSQL, Logging):
+    """All server settings."""
 
 
 @lru_cache
-def get_settings(env_file: str = ".env") -> Settings:
+def get_settings(env_file: str = ".env.example") -> Settings:
     """Create settings instance."""
 
-    a = Settings(_env_file=find_dotenv(env_file))
-    return a
+    return Settings(_env_file=find_dotenv(env_file))

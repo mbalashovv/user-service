@@ -55,31 +55,16 @@ def get_stream_handler():
 
 
 def get_logger(name):
-    """Get logger.
+    """Get logger."""
 
-    Args:
-        name:
-            Name of the logger.
-
-    Returns:
-        LoggerLevel instance.
-
-    Examples:
-        ::
-
-            >>> from app.pkg.logger import get_logger
-            >>> logger = get_logger(__name__)
-            >>> logger.info("Hello, World!")
-            2021-01-01 00:00:00,000 - [INFO] - app.pkg.logger - (logger.py).get_logger(43) - Hello, World!  # pylint: disable=line-too-long
-    """
     logger = logging.getLogger(name)
     file_path = str(
         Path(
-            settings.API.LOGGER.FOLDER_PATH,
-            f"{settings.API.INSTANCE_APP_NAME}.log",
+            settings.FOLDER_PATH,
+            f"{settings.API_INSTANCE_APP_NAME}.log",
         ).absolute(),
     )
     logger.addHandler(get_file_handler(file_name=file_path))
     logger.addHandler(get_stream_handler())
-    logger.setLevel(settings.API.LOGGER.LEVEL.upper())
+    logger.setLevel(settings.LOGGING_LEVEL.upper())
     return logger

@@ -139,3 +139,5 @@ data/
 cities.json
 
 .source/
+
+.ruff_cache

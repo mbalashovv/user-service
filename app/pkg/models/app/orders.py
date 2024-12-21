@@ -11,6 +11,7 @@ __all__ = [
     "User",
     "CreateUserCommand",
     "ReadUserQuery",
+    "UpdateUserCommandPayload",
     "UpdateUserCommand",
     "DeleteUserCommand",
 ]
@@ -67,10 +68,13 @@ class CreateUserCommand(BaseModel):
     password: str = UserFields.password
 
 
-class UpdateUserCommand(BaseModel):
-    id: PositiveInt = None
+class UpdateUserCommandPayload(BaseModel):
     username: Optional[str] = UserFields.username
     password: Optional[str] = UserFields.password
+
+
+class UpdateUserCommand(UpdateUserCommandPayload):
+    id: PositiveInt
 
 
 class DeleteUserCommand(BaseModel):

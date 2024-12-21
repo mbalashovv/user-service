@@ -17,11 +17,13 @@ async def test_update(
 
     await user_repository.update(
         cmd=models.UpdateUserCommand(
-            id=created_user.id, username=created_user.username + "a"
-        )
+            id=created_user.id,
+            username=created_user.username + "a",
+        ),
     )
 
-    assert (
-        await user_repository.read(query=models.ReadUserQuery(id=created_user.id))
-        != created_user
+    updated_user = await user_repository.read(
+        query=models.ReadUserQuery(id=created_user.id),
     )
+
+    assert updated_user != created_user

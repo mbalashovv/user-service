@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "orderbook"
+name = "user_service"
 version = "0.1.0"
-description = "A base implementation of orderbook"
+description = "Example of user service"
 authors = ["mbalashovv <isdedtool@gmail.com>"]
 readme = "README.md"
 
