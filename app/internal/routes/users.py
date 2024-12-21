@@ -23,7 +23,7 @@ users_router = APIRouter(
     "",
     status_code=status.HTTP_201_CREATED,
     description="Create new user.",
-    response_model=models.User,
+    response_model=models.UserResponse,
 )
 @inject
 async def create_user(
@@ -36,14 +36,14 @@ async def create_user(
 
 
 @users_router.get(
-    "/{user_id:int}",
+    "/{user_id:str}",
     status_code=status.HTTP_200_OK,
     description="Get an user.",
-    response_model=models.User,
+    response_model=models.UserResponse,
 )
 @inject
 async def read_user(
-    user_id: int,
+    user_id: str,
     users_service: UserService = Depends(
         Provide[Services.users_service],
     ),
@@ -57,7 +57,7 @@ async def read_user(
     "",
     status_code=status.HTTP_200_OK,
     description="Get all users.",
-    response_model=List[models.User],
+    response_model=List[models.UserResponse],
 )
 @inject
 async def read_all_users(
@@ -69,14 +69,14 @@ async def read_all_users(
 
 
 @users_router.patch(
-    "/{user_id:int}",
+    "/{user_id:str}",
     status_code=status.HTTP_200_OK,
     description="Update an user.",
-    response_model=models.User,
+    response_model=models.UserResponse,
 )
 @inject
 async def update_user(
-    user_id: int,
+    user_id: str,
     cmd: models.UpdateUserCommandPayload,
     users_service: UserService = Depends(
         Provide[Services.users_service],
@@ -88,14 +88,14 @@ async def update_user(
 
 
 @users_router.delete(
-    "/{user_id:int}",
+    "/{user_id:str}",
     status_code=status.HTTP_200_OK,
     description="Delete an user.",
-    response_model=models.User,
+    response_model=models.UserResponse,
 )
 @inject
 async def delete_user(
-    user_id: int,
+    user_id: str,
     users_service: UserService = Depends(
         Provide[Services.users_service],
     ),

@@ -16,7 +16,7 @@ class UserRepository(Repository):
     """User repository implementation."""
 
     @collect_response
-    async def create(self, cmd: models.CreateUserCommand) -> models.User:
+    async def create(self, cmd: models.CreateUserCommand) -> models.UserResponse:
         q = """
             insert into users(
                 username, password
@@ -31,7 +31,7 @@ class UserRepository(Repository):
             return await cur.fetchone()
 
     @collect_response
-    async def read(self, query: models.ReadUserQuery) -> models.User:
+    async def read(self, query: models.ReadUserQuery) -> models.UserResponse:
         q = """
             select id, username, password, created_at, deleted_at from users
                 where id = %(id)s and deleted_at is null;
@@ -41,7 +41,7 @@ class UserRepository(Repository):
             return await cur.fetchone()
 
     @collect_response
-    async def read_all(self) -> List[models.User]:
+    async def read_all(self) -> List[models.UserResponse]:
         q = """
             select id, username, password, created_at, deleted_at from users
                 where deleted_at is null;
@@ -51,7 +51,11 @@ class UserRepository(Repository):
             return await cur.fetchall()
 
     @collect_response
-    async def update(self, cmd: models.UpdateUserCommand) -> models.User:  # nosec
+    async def update(
+        self,
+        cmd: models.UpdateUserCommand,
+    ) -> models.UserResponse:
+        # nosec
         q = f"""
             update users set {self.__build_update_statement(cmd=cmd)}
                 where id = %(id)s and deleted_at is null
@@ -63,7 +67,7 @@ class UserRepository(Repository):
             return await cur.fetchone()
 
     @collect_response
-    async def delete(self, cmd: models.DeleteUserCommand) -> models.User:
+    async def delete(self, cmd: models.DeleteUserCommand) -> models.UserResponse:
         q = """
             update users set deleted_at = now()
                 where id = %(id)s and deleted_at is null

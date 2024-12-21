@@ -6,35 +6,14 @@ from pathlib import Path
 
 from app.pkg.settings import settings
 
-_log_format = (
+LOG_FORMAT = (
     "%(asctime)s - [%(levelname)s] - %(name)s - (%(filename)s).%("
     "funcName)s(%(lineno)d) - %(message)s "
 )
 
 
 def get_file_handler(file_name: str) -> RotatingFileHandler:
-    """Get file handler for logger.
-
-    Args:
-        file_name:
-            Name of the file to write logs.
-
-    Notes:
-        The file will be created in the directory
-        specified in the :attr:`.Settings.API.LOGGER.FOLDER_PATH` parameter.
-
-        If the directory does not exist, it will be created.
-
-        When the file size exceeds 5 MB, the file will be rotated.
-
-    Warnings:
-        If the server disk is full,
-        the file will not be rotated and the API service
-        will stop working.
-
-    Returns:
-        File handler for logger.
-    """
+    """Get file handler for logger."""
 
     Path(file_name).absolute().parent.mkdir(exist_ok=True, parents=True)
     file_handler = RotatingFileHandler(
@@ -42,7 +21,7 @@ def get_file_handler(file_name: str) -> RotatingFileHandler:
         maxBytes=5242880,
         backupCount=10,
     )
-    file_handler.setFormatter(logging.Formatter(_log_format))
+    file_handler.setFormatter(logging.Formatter(LOG_FORMAT))
     return file_handler
 
 
@@ -50,7 +29,7 @@ def get_stream_handler():
     """Get stream handler for logger."""
 
     stream_handler = logging.StreamHandler()
-    stream_handler.setFormatter(logging.Formatter(_log_format))
+    stream_handler.setFormatter(logging.Formatter(LOG_FORMAT))
     return stream_handler
 
 

@@ -21,19 +21,19 @@ class UserService:
     async def create_user(
         self,
         cmd: models.CreateUserCommand,
-    ) -> models.User:
+    ) -> models.UserResponse:
         return await self.__user_repository.create(cmd=cmd)
 
     async def read_user(
         self,
         query: models.ReadUserQuery,
-    ) -> models.User:
+    ) -> models.UserResponse:
         try:
             return await self.__user_repository.read(query=query)
         except EmptyResult as e:
             raise UserWasNotFound from e
 
-    async def read_all_users(self) -> List[models.User]:
+    async def read_all_users(self) -> List[models.UserResponse]:
         try:
             return await self.__user_repository.read_all()
         except EmptyResult:
@@ -42,7 +42,7 @@ class UserService:
     async def update_user(
         self,
         cmd: models.UpdateUserCommand,
-    ) -> models.User:
+    ) -> models.UserResponse:
         try:
             return await self.__user_repository.update(cmd=cmd)
         except EmptyResult as e:
@@ -51,7 +51,7 @@ class UserService:
     async def delete_user(
         self,
         cmd: models.DeleteUserCommand,
-    ) -> models.User:
+    ) -> models.UserResponse:
         try:
             return await self.__user_repository.delete(cmd=cmd)
         except EmptyResult as e:

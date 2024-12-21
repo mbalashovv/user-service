@@ -18,6 +18,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         **fastapi_kwargs,
+        title="User service",
     )
 
     __containers__.wire_packages(app=app)

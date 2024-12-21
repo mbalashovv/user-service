@@ -6,13 +6,12 @@ from app.pkg.models.core.routes import Routes
 
 __all__ = [
     "__routes__",
-    "users_router",
 ]
 
 
 __routes__ = Routes(
     routers=(
-        users_router,
         healthcheck_router,
+        users_router,
     ),
 )
